@@ -1,4 +1,5 @@
 from django.db import models
+from users.models import CustomUser
 
 
 class Brand(models.Model):
@@ -26,12 +27,13 @@ class Ware(models.Model):
         ("ayobo", "Ayobo"),
         ("ipaja", "Ipaja"),
     ]
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, unique=True)
-    brand = models.ForeignKey(Brand, related_name='brands', on_delete=models.CASCADE)
-    category = models.ForeignKey(Category, related_name='categories', on_delete=models.CASCADE)
+    brand = models.ForeignKey(Brand, related_name='wares', on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, related_name='wares', on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
     store = models.CharField(max_length=10, choices=STORE_CHOICES)
-    size = models.ManyToManyField(Size, related_name='sizes', blank=True)
+    size = models.ManyToManyField(Size, related_name='wares', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -52,10 +54,7 @@ class WareVariant(models.Model):
         return f"{self.ware.name} - {self.size}"
 
     def update_availability(self):
-        if self.stock > 0:
-            self.is_available = True
-        else:
-            self.is_available = False
+        self.is_available = self.stock > 0
         self.save()
 
 
@@ -66,6 +65,15 @@ class Batch(models.Model):
     expiry_date = models.DateField()
     manufacturing_date = models.DateField(null=True, blank=True)
     lot_number = models.CharField(max_length=50, blank=True, null=True)
+    is_expired = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Batch {self.lot_number or 'N/A'} - {self.variant}"
+
+    def save(self, *args, **kwargs):
+        # Automatically update `is_expired` when saving
+        self.is_expired = self.expiry_date < now().date()
+        super().save(*args, **kwargs)
 
 
 

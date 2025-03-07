@@ -23,14 +23,8 @@ class StoreDatabaseRouter:
         """
         return True
 
-    def allow_migrate(self, db, app_label, model_name=None, **hints):
-        """
-        Control where migrations are applied:
-        - 'auth' and 'contenttypes' go to 'default' (main database).
-        - Store-specific models go to their respective databases.
-        """
-        if app_label in ["auth", "contenttypes", "admin", "sessions","users"]:
-            return db == "default"  # Keep users in the main database
-        elif db in ["store1", "store2", "store3"]:
-            return True  # Allow store models in store databases
-        return None  # Default behavior
+def allow_migrate(self, db, app_label, model_name=None, **hints):
+    """Control migrations for multiple databases."""
+    if app_label == "users":
+        return db == "default" or db.startswith("store")  # Allow user migrations in all DBs
+    return db.startswith("store")  # Other apps go to store databases
