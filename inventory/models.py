@@ -1,5 +1,7 @@
 from django.db import models
 from users.models import CustomUser
+from django.utils.timezone import now
+
 
 
 class Brand(models.Model):
@@ -22,17 +24,11 @@ class Size(models.Model):
         return f'{self.size} {self.size_unit if self.size_unit else ""}'.strip()
 
 class Ware(models.Model):
-    STORE_CHOICES = [
-        ("ayetoro", "Ayetoro"),
-        ("ayobo", "Ayobo"),
-        ("ipaja", "Ipaja"),
-    ]
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, unique=True)
     brand = models.ForeignKey(Brand, related_name='wares', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='wares', on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
-    store = models.CharField(max_length=10, choices=STORE_CHOICES)
     size = models.ManyToManyField(Size, related_name='wares', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -45,13 +41,16 @@ class WareVariant(models.Model):
     ware = models.ForeignKey(Ware, related_name='variants', on_delete=models.CASCADE)
     size = models.ForeignKey(Size, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField(default=0)
     is_available = models.BooleanField(default=True)
     class Meta:
         unique_together = ('ware', 'size')
 
     def __str__(self):
         return f"{self.ware.name} - {self.size}"
+
+    @property
+    def stock(self):
+        return self.batches.aggregate(total=models.Sum('quantity'))['total'] or 0  # Auto-calculate stock
 
     def update_availability(self):
         self.is_available = self.stock > 0
@@ -65,15 +64,13 @@ class Batch(models.Model):
     expiry_date = models.DateField()
     manufacturing_date = models.DateField(null=True, blank=True)
     lot_number = models.CharField(max_length=50, blank=True, null=True)
-    is_expired = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Batch {self.lot_number or 'N/A'} - {self.variant}"
 
-    def save(self, *args, **kwargs):
-        # Automatically update `is_expired` when saving
-        self.is_expired = self.expiry_date < now().date()
-        super().save(*args, **kwargs)
+    @property
+    def is_expired(self):
+        return self.expiry_date < now().date()
 
 
 

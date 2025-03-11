@@ -81,31 +81,7 @@ WSGI_APPLICATION = 'AkinfoluFoods.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'user',
-        'USER': 'postgres',
-        'PASSWORD': 'Seun@112',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    },
-    'store1': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Ayobo',
-        'USER': 'postgres',
-        'PASSWORD': 'Seun@112',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    },
-    'store2': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Ipaja',
-        'USER': 'postgres',
-        'PASSWORD': 'Seun@112',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    },
-    'store3': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'Ayetoro',
+        'NAME': 'store',
         'USER': 'postgres',
         'PASSWORD': 'Seun@112',
         'HOST': 'localhost',
@@ -113,7 +89,7 @@ DATABASES = {
     },
 }
 
-DATABASE_ROUTERS = ['AkinfoluFoods.db_router.StoreDatabaseRouter']
+
 AUTH_USER_MODEL = "users.CustomUser"
 
 
