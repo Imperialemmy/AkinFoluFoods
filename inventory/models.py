@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 from users.models import CustomUser
 from django.utils.timezone import now
 
@@ -25,7 +26,7 @@ class Size(models.Model):
 
 class Ware(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, unique=True)
+    name = models.CharField(max_length=100)
     brand = models.ForeignKey(Brand, related_name='wares', on_delete=models.CASCADE)
     category = models.ForeignKey(Category, related_name='wares', on_delete=models.CASCADE)
     description = models.TextField(null=True, blank=True)
@@ -33,28 +34,34 @@ class Ware(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ('user', 'name', 'brand')
+
     def __str__(self):
-        return f"{self.name} ({self.store})"
+        return f"{self.name}"
 
 
 class WareVariant(models.Model):
-    ware = models.ForeignKey(Ware, related_name='variants', on_delete=models.CASCADE)
-    size = models.ForeignKey(Size, on_delete=models.CASCADE)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+    ware = models.ForeignKey('Ware', related_name='variants', on_delete=models.CASCADE)
+    size = models.ForeignKey('Size', on_delete=models.CASCADE)
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     is_available = models.BooleanField(default=True)
+
     class Meta:
         unique_together = ('ware', 'size')
 
     def __str__(self):
         return f"{self.ware.name} - {self.size}"
 
-    @property
-    def stock(self):
-        return self.batches.aggregate(total=models.Sum('quantity'))['total'] or 0  # Auto-calculate stock
-
     def update_availability(self):
-        self.is_available = self.stock > 0
+        """ Update the availability based on stock count. """
+        self.is_available = self.get_stock() > 0
         self.save()
+
+    def get_stock(self):
+        """ Efficiently calculate total stock for this variant. """
+        stock = self.batches.aggregate(total=Sum('quantity'))['total']
+        return stock or 0  # Return 0 if there are no batches
 
 
 
@@ -64,14 +71,16 @@ class Batch(models.Model):
     expiry_date = models.DateField()
     manufacturing_date = models.DateField(null=True, blank=True)
     lot_number = models.CharField(max_length=50, blank=True, null=True)
+    is_expired = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Batch {self.lot_number or 'N/A'} - {self.variant}"
 
-    @property
-    def is_expired(self):
-        return self.expiry_date < now().date()
-
+    def save(self, *args, **kwargs):
+        """ Update expiration status and variant availability when saving a batch. """
+        self.is_expired = self.expiry_date < now().date()
+        super().save(*args, **kwargs)
+        self.variant.update_availability()  # Update WareVariant availability
 
 
 class Image(models.Model):

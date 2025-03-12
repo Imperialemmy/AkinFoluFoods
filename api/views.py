@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ModelViewSet
 from users.models import CustomUser
-from .serializers import UserSerializer, BrandSerializer, CategorySerializer, SizeSerializer, WareSerializer, WareVariantSerializer, BatchSerializer, ImageSerializer
+from .serializers import BrandSerializer, CategorySerializer, SizeSerializer, WareSerializer, WareVariantSerializer, BatchSerializer, ImageSerializer
 from inventory.models import Brand, Category, Size, Ware, WareVariant, Batch, Image
 from rest_framework.response import Response
 from rest_framework import status, viewsets
@@ -39,6 +39,6 @@ class ImageViewSet(ModelViewSet):
     queryset = Image.objects.all()
     serializer_class = ImageSerializer
 
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
-    serializer_class = UserSerializer
+# class UserViewSet(viewsets.ModelViewSet):
+#     queryset = CustomUser.objects.all()
+#     serializer_class = UserSerializer
