@@ -71,8 +71,10 @@ class WareSerializer(serializers.ModelSerializer):
         model = Ware
         fields = ["id", "user", "name", "brand", "brand_detail", "category", "category_detail",
                   "description", "size", "size_detail", "created_at", "updated_at", "variants"]
+        read_only_fields = ["user"]
 
     def create(self, validated_data):
+        validated_data['user'] = self.context['request'].user
         sizes = validated_data.pop("size", [])
         ware = Ware.objects.create(**validated_data)
         ware.size.set(sizes)

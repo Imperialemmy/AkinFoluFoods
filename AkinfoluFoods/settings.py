@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     'users',
     'rest_framework',
     'api',
+    'corsheaders',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -51,7 +53,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",  # Vite dev server
+]
+
 
 ROOT_URLCONF = 'AkinfoluFoods.urls'
 

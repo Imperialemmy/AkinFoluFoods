@@ -6,6 +6,8 @@ from inventory.models import Brand, Category, Size, Ware, WareVariant, Batch, Im
 from rest_framework.response import Response
 from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from django_filters.rest_framework import DjangoFilterBackend
+from inventory.filters import WareFilter
 
 
 
@@ -26,6 +28,8 @@ class SizeViewSet(ModelViewSet):
 class WareViewSet(ModelViewSet):
     queryset = Ware.objects.all()
     serializer_class = WareSerializer
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = WareFilter
 
 class WareVariantViewSet(ModelViewSet):
     queryset = WareVariant.objects.all()
