@@ -72,6 +72,8 @@ class Batch(models.Model):
     manufacturing_date = models.DateField(null=True, blank=True)
     lot_number = models.CharField(max_length=50, blank=True, null=True)
     is_expired = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=now)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"Batch {self.lot_number or 'N/A'} - {self.variant}"

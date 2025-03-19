@@ -1,4 +1,5 @@
 # inventory/serializers.py
+from django.db.models import Max
 from rest_framework import serializers
 from inventory.models import Brand, Category, Size, Ware, WareVariant, Batch, Image
 
@@ -23,10 +24,11 @@ class WareVariantSerializer(serializers.ModelSerializer):
     ware_name = serializers.CharField(source="ware.name", read_only=True)
     size_detail = SizeSerializer(source="size", read_only=True)  # Full size details for GET
     stock = serializers.SerializerMethodField()
+    last_updated = serializers.SerializerMethodField()
 
     class Meta:
         model = WareVariant
-        fields = ["id", "ware", "ware_name", "size", "size_detail", "price", "is_available", "stock"]
+        fields = ["id", "ware", "ware_name", "size", "size_detail", "price", "is_available", "stock",'last_updated']
 
     def get_stock(self, obj):
         return obj.get_stock()
@@ -57,6 +59,11 @@ class WareVariantSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
         return instance
+
+    def get_last_updated(self, obj):
+        latest_batch = Batch.objects.filter(variant=obj).aggregate(Max('updated_at'))
+        return latest_batch['updated_at__max']
+
 
 class WareSerializer(serializers.ModelSerializer):
     brand = serializers.PrimaryKeyRelatedField(queryset=Brand.objects.all())
@@ -95,7 +102,8 @@ class BatchSerializer(serializers.ModelSerializer):
     class Meta:
         model = Batch
         fields = ["id", "variant", "variant_detail", "quantity", "expiry_date",
-                  "manufacturing_date", "lot_number", "is_expired"]
+                  "manufacturing_date", "lot_number", "is_expired",'created_at','updated_at']
+        read_only_fields = ["created_at", "updated_at"]
 
 class ImageSerializer(serializers.ModelSerializer):
     ware = serializers.PrimaryKeyRelatedField(queryset=Ware.objects.all())
