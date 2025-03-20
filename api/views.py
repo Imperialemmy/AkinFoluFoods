@@ -14,7 +14,7 @@ from rest_framework.pagination import PageNumberPagination
 
 
 
-class CustomVariantPagination(PageNumberPagination):
+class CustomPagination(PageNumberPagination):
     page_size = 10  # Set to 10 items per page
     page_size_query_param = 'page_size'  # Optional: Allow overriding via ?page_size=X
     max_page_size = 100  # Optional: Cap for safety
@@ -31,25 +31,33 @@ class CustomVariantPagination(PageNumberPagination):
 class BrandViewSet(ModelViewSet):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['name']
 
 class CategoryViewSet(ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-
+    pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['name']
 class SizeViewSet(ModelViewSet):
     queryset = Size.objects.all()
     serializer_class = SizeSerializer
 
+
 class WareViewSet(ModelViewSet):
     queryset = Ware.objects.all()
     serializer_class = WareSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = WareFilter
+    pagination_class = CustomPagination
+    search_fields = ['name']
 
 class WareVariantViewSet(ModelViewSet):
     queryset = WareVariant.objects.all()
     serializer_class = WareVariantSerializer
-    pagination_class = CustomVariantPagination
+    pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
     search_fields = ['ware__name']  # Search by ware name
     ordering_fields = ['last_updated']  # Order by last updated
