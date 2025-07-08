@@ -11,7 +11,19 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter, SearchFilter
 from inventory.filters import WareFilter
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.decorators import action
 
+
+
+class BulkDeleteMixin:
+    @action(detail=False, methods=["post"], url_path="bulk-delete")
+    def bulk_delete(self, request):
+        ids = request.data.get("ids", [])
+        if not ids:
+            return Response({"detail": "No IDs provided."}, status=status.HTTP_400_BAD_REQUEST)
+
+        self.queryset.model.objects.filter(id__in=ids).delete()
+        return Response({"detail": "Deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 class CustomPagination(PageNumberPagination):
@@ -28,31 +40,41 @@ class CustomPagination(PageNumberPagination):
         })
 
 
-class BrandViewSet(ModelViewSet):
+class BrandViewSet(ModelViewSet, BulkDeleteMixin):
     queryset = Brand.objects.all()
     serializer_class = BrandSerializer
-    pagination_class = CustomPagination
+    # pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['name']
 
-class CategoryViewSet(ModelViewSet):
+class CategoryViewSet(ModelViewSet, BulkDeleteMixin):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    pagination_class = CustomPagination
+    # pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['name']
-class SizeViewSet(ModelViewSet):
+    
+class SizeViewSet(ModelViewSet, BulkDeleteMixin):
     queryset = Size.objects.all()
     serializer_class = SizeSerializer
 
 
-class WareViewSet(ModelViewSet):
+class WareViewSet(ModelViewSet, BulkDeleteMixin):
     queryset = Ware.objects.all()
     serializer_class = WareSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     filterset_class = WareFilter
-    pagination_class = CustomPagination
+    # pagination_class = CustomPagination
     search_fields = ['name']
+
+    # @action(detail=False, methods=['post'], url_path='bulk-delete')
+    # def bulk_delete(self, request):
+    #     ids = request.data.get('ids', [])
+    #     if not ids:
+    #         return Response({'detail': 'No IDs provided.'}, status=status.HTTP_400_BAD_REQUEST)
+    #
+    #     Ware.objects.filter(id__in=ids).delete()
+    #     return Response({'detail': 'Deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
 class WareVariantViewSet(ModelViewSet):
     queryset = WareVariant.objects.all()

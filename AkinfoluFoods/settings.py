@@ -11,6 +11,11 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+
+DEBUG = config('DEBUG', default=False, cast=bool)
+SECRET_KEY = config('SECRET_KEY')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: v.split(','))
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2hl@7%=)@h(g5%qz!l!2f7&dau$17(0r%(nvtn=!nyjoa3n^y)'
+# SECRET_KEY = 'django-insecure-2hl@7%=)@h(g5%qz!l!2f7&dau$17(0r%(nvtn=!nyjoa3n^y)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+# DEBUG = True
+#
+# ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -56,10 +61,13 @@ MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Vite dev server
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "http://localhost:5173",  # Vite dev server
+# ]
 
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+APPEND_SLASH = True
 
 ROOT_URLCONF = 'AkinfoluFoods.urls'
 
@@ -89,11 +97,11 @@ WSGI_APPLICATION = 'AkinfoluFoods.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'store',
-        'USER': 'postgres',
-        'PASSWORD': 'Seun@112',
+        'NAME': config('DATABASE_NAME'),
+        'USER': config('DATABASE_USER'),
+        'PASSWORD': config('DATABASE_PASSWORD'),
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '',
     },
 }
 

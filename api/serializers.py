@@ -14,9 +14,29 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 class SizeSerializer(serializers.ModelSerializer):
+    wares = serializers.SerializerMethodField()
+
     class Meta:
         model = Size
-        fields = "__all__"
+        fields = ['id', 'size', 'size_unit', 'wares']
+
+    def get_wares(self, obj):
+        return [
+            {'id': ware.id, 'name': ware.name}
+            for ware in obj.wares.all()
+        ]
+    
+
+
+class BatchSerializer(serializers.ModelSerializer):
+    variant = serializers.PrimaryKeyRelatedField(queryset=WareVariant.objects.all())
+    # variant_detail = WareVariantSerializer(source='variant', read_only=True)
+
+    class Meta:
+        model = Batch
+        fields = ["id", "variant", "quantity", "expiry_date",
+                  "manufacturing_date", "lot_number", "is_expired",'created_at','updated_at']
+        read_only_fields = ["created_at", "updated_at"]
 
 class WareVariantSerializer(serializers.ModelSerializer):
     ware = serializers.PrimaryKeyRelatedField(queryset=Ware.objects.all())
@@ -25,10 +45,11 @@ class WareVariantSerializer(serializers.ModelSerializer):
     size_detail = SizeSerializer(source="size", read_only=True)  # Full size details for GET
     stock = serializers.SerializerMethodField()
     last_updated = serializers.SerializerMethodField()
+    batches = BatchSerializer(many=True, read_only=True)
 
     class Meta:
         model = WareVariant
-        fields = ["id", "ware", "ware_name", "size", "size_detail", "price", "is_available", "stock",'last_updated']
+        fields = ["id", "ware", "ware_name", "size", "size_detail", "price", "is_available", "stock",'last_updated',"batches"]
 
     def get_stock(self, obj):
         return obj.get_stock()
@@ -95,15 +116,7 @@ class WareSerializer(serializers.ModelSerializer):
 
 
 
-class BatchSerializer(serializers.ModelSerializer):
-    variant = serializers.PrimaryKeyRelatedField(queryset=WareVariant.objects.all())
-    variant_detail = WareVariantSerializer(source='variant', read_only=True)
 
-    class Meta:
-        model = Batch
-        fields = ["id", "variant", "variant_detail", "quantity", "expiry_date",
-                  "manufacturing_date", "lot_number", "is_expired",'created_at','updated_at']
-        read_only_fields = ["created_at", "updated_at"]
 
 class ImageSerializer(serializers.ModelSerializer):
     ware = serializers.PrimaryKeyRelatedField(queryset=Ware.objects.all())
